@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Selector & Field Planner</title>
+<style>
+:root{color-scheme:dark;--bg:#172331;--panel:#202f40;--line:#3c5064;--text:#e8eef5;--muted:#a9bacb;--accent:#76d7a5;--highlight:#284e42;--red:#e77979;--purple:#b7a0f5;--green:#83d7a1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:22px}main{max-width:1100px;margin:auto}.eyebrow{color:var(--accent);font-size:.78rem;font-weight:750;letter-spacing:.12em;text-transform:uppercase}h1{font-size:clamp(1.6rem,4vw,2.2rem);margin:.25rem 0}.intro{color:var(--muted);margin:0 0 22px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:17px;margin:16px 0}.panel h2{margin:0 0 12px;font-size:1.15rem}.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.choices{display:flex;gap:9px;flex-wrap:wrap}.choice{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:9px 12px;cursor:pointer}.choice:has(input:checked){border-color:var(--accent);background:#263e3b}input{accent-color:var(--accent);width:17px;height:17px}label.field{display:block;color:var(--muted);font-size:.9rem;margin:0 0 6px}select{width:100%;background:#172331;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:11px;font:inherit}.select-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0}button{background:transparent;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 13px;cursor:pointer}button:hover{border-color:var(--accent)}#summary{color:var(--accent);font-weight:700}.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:11px}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line)}th{background:#243447;color:#c8d6e4;font-size:.9rem}tbody tr:last-child td{border-bottom:0}tbody tr{transition:background .15s,opacity .15s}tbody tr.match{background:var(--highlight)}tbody tr.match td:first-child{box-shadow:inset 4px 0 var(--accent)}tbody tr.dim{opacity:.4}.badge{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-size:.85rem}.match .badge{border-color:#579e80}.legend,.muted{color:var(--muted);font-size:.9rem}.steps{display:grid;gap:10px}.step{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:13px;border:1px solid var(--line);border-radius:11px;background:#1b2938}.num{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#2c493f;color:var(--accent);font-weight:800}.step strong{display:block;margin-bottom:3px}.step p{margin:0;color:var(--muted)}.final-step{border-color:#579e80}.notice{padding:11px 13px;border-left:3px solid var(--accent);background:#1b2938;border-radius:5px;color:var(--muted);margin-top:12px}.pill{display:inline-block;border-radius:7px;padding:3px 8px;font-weight:650;font-size:.86rem}.Nitrogenic{background:#244734;color:var(--green)}.Phosphoric{background:#512d32;color:#ffaaaa}.Potassic{background:#3c315b;color:#d0c0ff}
+@media(max-width:700px){body{padding:12px}.controls,.select-grid{grid-template-columns:1fr}.actions{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">Farm helper</div>
+<h1>🌱 Plant Selector & Field Planner</h1>
+<p class="intro">Підбирай рослини за добривом і автоматично розраховуй, як підготувати лунку для потрібної мутації або високої врожайності.</p>
+
+<section class="panel">
+<h2>1. Підбір рослин</h2>
+<div class="controls">
+<div><label class="field">Тип ґрунту / добрива для цільової рослини</label><div class="choices">
+<label class="choice"><input type="radio" name="fertilizer" value="Phosphoric" checked> 🔴 Phosphoric</label>
+<label class="choice"><input type="radio" name="fertilizer" value="Nitrogenic"> 🟢 Nitrogenic</label>
+<label class="choice"><input type="radio" name="fertilizer" value="Potassic"> 🟣 Potassic</label>
+</div></div>
+<div><label class="field">Бажаний результат</label><div class="choices">
+<label class="choice"><input type="radio" name="goal" value="yield" checked> High Yield — високий урожай</label>
+<label class="choice"><input type="radio" name="goal" value="mutation"> Mutation — мутація</label>
+</div></div></div>
+<div class="actions"><div id="summary" aria-live="polite"></div><button id="resetFilter">Скинути фільтр</button></div>
+<div class="table-wrap"><table><thead><tr><th>Рослина</th><th>Тип рослини</th><th>Ґрунт для мутації</th><th>Ґрунт для High Yield</th></tr></thead><tbody id="plantRows"></tbody></table></div>
+<p class="legend">Зеленим підсвічуються рослини, для яких обраний тип ґрунту дає зазначений результат.</p>
+</section>
+
+<section class="panel">
+<h2>2. Послідовність вирощування</h2>
+<p class="muted">Обери цільову рослину, результат і поточний тип лунки. План врахує, що після збору врожаю лунка набуває типу зібраної рослини.</p>
+<div class="select-grid">
+<div><label class="field" for="target">Що хочеш виростити?</label><select id="target"></select></div>
+<div><label class="field" for="plannerGoal">Результат</label><select id="plannerGoal"><option value="mutation">Mutation — мутація</option><option value="yield">High Yield — високий урожай</option></select></div>
+<div><label class="field" for="soil">Поточний тип лунки</label><select id="soil"><option value="Nitrogenic">🟢 Nitrogenic — зелена</option><option value="Phosphoric">🔴 Phosphoric — червона</option><option value="Potassic">🟣 Potassic — фіолетова</option></select></div>
+</div>
+<div class="actions"><div id="planSummary"></div><button id="resetPlan">Скинути план</button></div>
+<div id="plan" class="steps" aria-live="polite"></div>
+<div class="notice" id="planNote"></div>
+</section>
+</main>
+<script>
+const plants=[
+{name:'Пшениця / Wheat',type:'Nitrogenic',mutation:'Potassic',yield:'Phosphoric'},
+{name:'Резиника / Polyberry',type:'Potassic',mutation:'Phosphoric',yield:'Nitrogenic'},
+{name:'Моркорень / Caroot',type:'Potassic',mutation:'Phosphoric',yield:'Nitrogenic'},
+{name:'Алая капуста / Rabbage',type:'Phosphoric',mutation:'Nitrogenic',yield:'Potassic'},
+{name:'Медовлянка / Honeybottle',type:'Potassic',mutation:'Phosphoric',yield:'Nitrogenic'},
+{name:'Светок / Lumbloom',type:'Phosphoric',mutation:'Nitrogenic',yield:'Potassic'},
+{name:'Шоковник / Zappertwig',type:'Nitrogenic',mutation:'Potassic',yield:'Phosphoric'},
+{name:'Хромаїс / Chromaize',type:'Nitrogenic',mutation:'Potassic',yield:'Phosphoric'}
+];
+const color={Nitrogenic:'🟢',Phosphoric:'🔴',Potassic:'🟣'};
+const tbody=document.getElementById('plantRows');
+function typeBadge(t){return `<span class="pill ${t}">${color[t]} ${t}</span>`}
+plants.forEach((p,i)=>{const tr=document.createElement('tr');tr.dataset.i=i;tr.innerHTML=`<td>${p.name}</td><td>${typeBadge(p.type)}</td><td>${typeBadge(p.mutation)}</td><td>${typeBadge(p.yield)}</td>`;tbody.appendChild(tr)});
+const target=document.getElementById('target');
+plants.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.name;target.appendChild(o)});
+target.value='1';
+function updateTable(){
+ const fert=document.querySelector('input[name="fertilizer"]:checked').value;
+ const goal=document.querySelector('input[name="goal"]:checked').value;
+ let count=0;
+ [...tbody.rows].forEach((r,i)=>{const p=plants[i];const match=p[goal]===fert;r.classList.toggle('match',match);r.classList.toggle('dim',!match);if(match)count++});
+ document.getElementById('summary').textContent=`Знайдено: ${count} · ${fert} + ${goal==='yield'?'High Yield':'Mutation'}`;
+}
+function updatePlan(){
+ const p=plants[Number(target.value)];
+ const goal=document.getElementById('plannerGoal').value;
+ let soil=document.getElementById('soil').value;
+ const required=p[goal];
+ const label=goal==='mutation'?'мутацію':'високу врожайність';
+ const box=document.getElementById('plan');box.innerHTML='';
+ document.getElementById('planSummary').textContent=`Ціль: ${p.name} · ${label}`;
+ const add=(n,title,desc,final=false)=>{const d=document.createElement('div');d.className='step'+(final?' final-step':'');d.innerHTML=`<div class="num">${n}</div><div><strong>${title}</strong><p>${desc}</p></div>`;box.appendChild(d)};
+ let n=1;
+ if(soil!==required){
+   const prep=plants.find(x=>x.type===required);
+   add(n++,`Посади ${prep.name}`,`Поточний ґрунт — ${soil}. Посади рослину типу ${typeBadge(required)}. Її можна вирощувати на іншому типі ґрунту; після збору врожаю лунка стане ${required}.`);
+   add(n++,`Збери врожай ${prep.name}`,`Обов'язково збери врожай, щоб лунка змінила тип із ${soil} на ${required}.`);
+   soil=required;
+ } else {
+   add(n++,`Ґрунт уже підходить`, `Лунка зараз ${typeBadge(required)}, саме такий тип потрібен для ${label} у ${p.name}.`);
+ }
+ add(n++,`Посади ${p.name}`,`Посади цільову рослину на ${typeBadge(required)} ґрунт.`);
+ add(n,`Збери цільовий урожай`,`За таблицею результат має бути: ${label} для ${p.name}.`,true);
+ document.getElementById('planNote').innerHTML=`Важливо: план використовує правило з наданого гайда — після збору врожаю тип лунки стає типом зібраної рослини. Перед посадкою перевіряй колір/тип лунки в грі.`;
+}
+document.querySelectorAll('input[name="fertilizer"],input[name="goal"]').forEach(x=>x.addEventListener('change',updateTable));
+document.getElementById('resetFilter').addEventListener('click',()=>{document.querySelector('input[name="fertilizer"][value="Phosphoric"]').checked=true;document.querySelector('input[name="goal"][value="yield"]').checked=true;updateTable()});
+[target,document.getElementById('plannerGoal'),document.getElementById('soil')].forEach(x=>x.addEventListener('change',updatePlan));
+document.getElementById('resetPlan').addEventListener('click',()=>{target.value='1';document.getElementById('plannerGoal').value='mutation';document.getElementById('soil').value='Nitrogenic';updatePlan()});
+updateTable();updatePlan();
+</script></body></html>
